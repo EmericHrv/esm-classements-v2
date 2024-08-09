@@ -1,0 +1,36 @@
+version: '3'
+services:
+  caddy:
+    image: caddy:2.7
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:80"
+      - "8443:443"
+      - "8443:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/data:/data
+      - ./caddy/config:/config
+    networks:
+      - backend
+
+  node:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - backend
+
+  react:
+    build: ./frontend
+    restart: unless-stopped
+    networks:
+      - backend
+networks:
+  backend:
+    driver: bridge
