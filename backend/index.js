@@ -9,7 +9,7 @@ import { getClubTeams, getGroupRanking, getNextTeamMatch, getLastTeamMatch, getC
 dotenv.config();
 const { NODE_ENV } = process.env;
 
-const version = "2.0.1";
+const version = "2.1.1";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const __webapp = __dirname + '/webapp';
