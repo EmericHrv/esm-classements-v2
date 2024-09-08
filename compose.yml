@@ -22,6 +22,11 @@ services:
       - classements_network
     environment:
       - REACT_APP_API_BASE_URL=https://api.classements.esmorannes.com
+      - PRIMARY_LIGHT=#fff385
+      - PRIMARY_DEFAULT=#ffde00
+      - PRIMARY_DARK=#ccaf00
+      - TEXT_COLOR=#000000
+
     ports:
       - "8082:8082"
 
