@@ -1,9 +1,0 @@
-:80 {
-    handle_path /api/* {
-        reverse_proxy node:8080
-    }
-
-    handle {
-        reverse_proxy react:80
-    }
-}
