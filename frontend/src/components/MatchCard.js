@@ -1,6 +1,6 @@
 import React from 'react';
 
-const MatchCard = ({ match, title }) => {
+const MatchCard = ({ clubId, match, title }) => {
     return (
         <div className="border rounded-lg shadow-md overflow-hidden">
             <div className="bg-gray-200 p-2 text-center font-semibold">
@@ -21,7 +21,7 @@ const MatchCard = ({ match, title }) => {
                                         alt={`Logo ${match.homeTeam.name}`}
                                     />
                                 )}
-                                <p className={`text-sm mt-2 ${match.homeTeam.clubId === match.clubId ? 'font-bold text-primary' : ''}`}>
+                                <p className={`text-sm mt-2 ${match.homeTeam.clubId === clubId ? 'font-bold text-primary' : ''}`}>
                                     {match.homeTeam.name}
                                 </p>
                             </div>
@@ -48,13 +48,13 @@ const MatchCard = ({ match, title }) => {
                                         alt={`Logo ${match.awayTeam.name}`}
                                     />
                                 )}
-                                <p className={`text-sm mt-2 ${match.awayTeam.clubId === match.clubId ? 'font-bold text-primary' : ''}`}>
+                                <p className={`text-sm mt-2 ${match.awayTeam.clubId === clubId ? 'font-bold text-primary' : ''}`}>
                                     {match.awayTeam.name}
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-primary text-black p-2 text-center">
+                    <div className="bg-primary text-text p-2 text-center">
                         {match.competitionName} - {match.competitionType === 'CP' ? 'Tour' : 'Journée'} {match.groupDay}
                     </div>
                 </>

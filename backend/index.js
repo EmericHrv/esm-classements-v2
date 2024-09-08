@@ -1,15 +1,18 @@
 import express from 'express';
+import dotenv from 'dotenv';
 import http from 'http';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { getClubTeams, getGroupRanking, getNextTeamMatch, getLastTeamMatch, getCompetitionTeams, getCompetitionResults, getCompetitionCalendar } from './webapp/assets/js/fff/fff_data_module.mjs';
 
-const version = "1.0.1";
+dotenv.config();
+const { NODE_ENV } = process.env;
+
+const version = "2.0.1";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const __webapp = __dirname + '/webapp';
-const __pages = __webapp + '/pages';
 
 const app = express();
 const httpPort = process.env.HTTP_PORT || 8080;
@@ -17,8 +20,9 @@ const httpServer = http.createServer(app);
 
 const log = console.log;
 
-//////////////////CLUB INFOS/////////////////////
-const clubIDs = [process.env.CLUB_ID || 8422, process.env.CLUB_ENTENTE_ID || 200608];
+//////////////////CLUBS INFOS/////////////////////
+const clubIDs = process.env.CLUB_IDS.split(',').map(id => parseInt(id, 10));
+
 
 function getTIMESTAMP() {
     var date = new Date();
@@ -34,8 +38,18 @@ function getTIMESTAMP() {
 
 // Middleware pour parser le corps des requêtes en JSON
 app.use(express.json());
-// Middleware CORS
-app.use(cors());
+
+if (NODE_ENV === 'dev') {
+    app.use(cors());
+} else {
+    console.log('Environnement de production');
+    // Middleware CORS
+    app.use(cors({
+        origin: 'https://classements.esmorannes.com',
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization']
+    }));
+}
 
 /**
    *  App API
@@ -73,6 +87,42 @@ app.post("/api/rankings", async (req, res) => {
     } catch (error) {
         console.error('Error:', error.message);
         res.status(500).json({ error: 'Unable to fetch rankings' });
+    }
+});
+
+// Route pour récupérer le classement d'une competition
+app.post("/api/ranking", async (req, res) => {
+    const { competitionId, phaseId, groupId } = req.body;
+
+    if (!competitionId || !phaseId || !groupId) {
+        return res.status(400).json({ error: 'Invalid request body. Must contain competitionId, phaseId, and groupId.' });
+    }
+
+    try {
+        const ranking = await getGroupRanking(competitionId, phaseId, groupId);
+        var result = null;
+        if (ranking.length === 0) {
+            const temporaryRanking = await getCompetitionTeams(competitionId, phaseId, groupId);
+            result = {
+                competitionId,
+                phaseId,
+                groupId,
+                ranking: temporaryRanking
+            };
+        } else {
+            result = {
+                competitionId,
+                phaseId,
+                groupId,
+                ranking
+            };
+        }
+
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify(result, null, 2)); // 2 est le nombre d'espaces pour l'indentation
+    } catch (error) {
+        console.error('Error:', error.message);
+        res.status(500).json({ error: 'Unable to fetch ranking' });
     }
 });
 

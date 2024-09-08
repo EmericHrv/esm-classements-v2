@@ -1,9 +1,10 @@
 // fff_data_manager.mjs
 import axios from 'axios';
 import utils from '../utils/utils.js';
+import { DateTime } from 'luxon';
 
 async function getClubTeams(clubId) {
-    console.log(`getClubTeams ${clubId}`);
+    // console.log(`getClubTeams ${clubId}`);
     const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes`;
 
     try {
@@ -320,8 +321,7 @@ async function getCompetitionTeams(competitionId, phaseId, groupId) {
 }
 
 async function getNextTeamMatch(clubId, teamId) {
-    // console.log('getNextTeamMatch');
-    const date_after = utils.getNextDayDate();
+    const date_after = utils.getCurrentDate();
     const date_before = utils.getNext2MonthDate();
     const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes/${teamId}/calendrier?ma_dat[after]=${date_after}&ma_dat[before]=${date_before}`;
 
@@ -331,15 +331,34 @@ async function getNextTeamMatch(clubId, teamId) {
         if (response.status === 200) {
             let matches = response.data['hydra:member'];
 
-            // Convertir les dates des matchs en objets Date et trier
+            const now = DateTime.now().setZone('Europe/Paris').toJSDate(); // Date et heure actuelles
+
+            // Fonction pour convertir l'heure au format 'HH'H'mm' en 'HH:mm'
+            const convertTimeFormat = (timeStr) => {
+                return timeStr.replace('H', ':');
+            };
+
+            // Fonction pour combiner la date (au format ISO) et l'heure du match en un objet Date
+            const parseMatchDateTime = (isoDateStr, timeStr) => {
+                const correctedTime = convertTimeFormat(timeStr); // Corrige le format de l'heure
+                // Extraire la partie date de l'ISO sans l'heure et la combiner avec l'heure correcte
+                const dateOnly = DateTime.fromISO(isoDateStr).toFormat('yyyy-MM-dd'); // Obtenir juste la date
+                // Créer un nouvel objet Date avec la date et l'heure combinées dans le fuseau horaire de Paris
+                return DateTime.fromISO(`${dateOnly}T${correctedTime}`, { zone: 'Europe/Paris' }).toJSDate();
+            };
+
+            // Convertir les dates et heures des matchs en objets Date, puis trier par date
             matches = matches.map(match => {
-                return { ...match, dateObj: new Date(match['date']) };
+                // Combiner date ISO et heure avant de créer l'objet Date
+                const dateObj = parseMatchDateTime(match['date'], match['time']);
+                return { ...match, dateObj };
             }).sort((a, b) => a.dateObj - b.dateObj);
 
-            // Trouver le match le plus proche
-            const today = new Date();
-            const nextMatch = matches.find(match => match.dateObj >= today);
-            // console.log(nextMatch);
+            // Trouver le prochain match qui se déroule après la date et l'heure actuelles
+            const nextMatch = matches.find(match => match.dateObj > now);
+
+            // console.log('Date et heure Prochain match:', nextMatch.dateObj);
+
 
             if (nextMatch) {
                 // Construire et retourner l'objet match

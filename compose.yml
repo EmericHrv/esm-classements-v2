@@ -1,36 +1,30 @@
-version: '3'
 services:
-  caddy:
-    image: caddy:2.7
-    restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-    ports:
-      - "80:80"
-      - "443:443"
-      - "8080:80"
-      - "8443:443"
-      - "8443:443/udp"
-    volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy/data:/data
-      - ./caddy/config:/config
-    networks:
-      - backend
-
-  node:
-    build: ./backend
-    restart: unless-stopped
-    env_file:
-      - .env
-    networks:
-      - backend
-
-  react:
-    build: ./frontend
-    restart: unless-stopped
-    networks:
-      - backend
-networks:
   backend:
-    driver: bridge
+    build:
+      context: ./backend
+    container_name: backend-classements
+    restart: always
+    networks:
+      - classements_network
+    environment:
+      - CLUB_IDS=8422,200608
+      - HTTP_PORT=5050
+      - NODE_ENV=production
+    ports:
+      - "5050:5050"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend-classements
+    restart: always
+    networks:
+      - classements_network
+    environment:
+      - REACT_APP_API_BASE_URL=https://api.classements.esmorannes.com/api
+    ports:
+      - "8082:8082"
+
+networks:
+  classements_network:
+    external: true
