@@ -3,25 +3,31 @@ import TeamColumn from './TeamColumn';
 import Header from './Header';
 
 const ClubPage = ({ club }) => {
-    const sortedTeams = club.teams.sort((a, b) => a.id - b.id);
-
+    // État pour l'index de l'équipe actuellement affichée
     const [index, setIndex] = useState(0);
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setIndex((prevIndex) => (prevIndex + 1) % 3);
-        }, 15000); // Change view every 15 seconds
+        // Réinitialiser l'index à 0 à chaque fois que le club change
+        setIndex(0);
 
+        // Créer un intervalle qui met à jour l'index toutes les 20 secondes
+        const interval = setInterval(() => {
+            setIndex((prevIndex) => (prevIndex + 1) % 3); // Alterner entre 0, 1 et 2
+        }, 20000); // Changer toutes les 20 secondes
+
+        // Nettoyer l'intervalle lorsque le composant est démonté ou que le club change
         return () => clearInterval(interval);
-    }, []);
+    }, [club]); // Dépendance sur le club pour redémarrer à chaque changement
 
     return (
         <div className="club-page w-full">
-            <Header title={`Équipes ${club.clubName}`} />
+            {/* Titre du club */}
+            <Header title={club.clubName} />
 
+            {/* Afficher les équipes */}
             <div className="flex flex-wrap gap-4 px-4 mt-2">
-                {sortedTeams.length > 0 ? (
-                    sortedTeams.map((team) => (
+                {club.teams.length > 0 ? (
+                    club.teams.map((team) => (
                         <TeamColumn key={team.id} team={team} clubId={club.clubId} index={index} />
                     ))
                 ) : (

@@ -7,7 +7,7 @@ import ErrorPage from './components/ErrorPage';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.classements.esmorannes.com';
 
 const App = () => {
-  const [clubsData, setClubsData] = useState([]);
+  const [pagesData, setPagesData] = useState([]); // We store pages of clubs and team groups
   const [currentIndex, setCurrentIndex] = useState(0);
   const [error, setError] = useState(null);
   const [statusCode, setStatusCode] = useState(null);
@@ -20,7 +20,23 @@ const App = () => {
       // Filter out clubs that have no teams
       const clubsWithTeams = response.data.filter(club => club.teams && club.teams.length > 0);
 
-      setClubsData(clubsWithTeams);
+      // Sort teams by team.id and split them into groups of 3
+      const clubsWithGroupedTeams = clubsWithTeams.flatMap(club => {
+        // Sort teams by team.id
+        const sortedTeams = club.teams.sort((a, b) => a.id - b.id);
+
+        // Split teams into groups of 3
+        const groupedTeams = [];
+        for (let i = 0; i < sortedTeams.length; i += 3) {
+          groupedTeams.push({
+            ...club, // Spread the entire club object to pass it later
+            teams: sortedTeams.slice(i, i + 3), // Grouping teams in chunks of 3
+          });
+        }
+        return groupedTeams;
+      });
+
+      setPagesData(clubsWithGroupedTeams);
       setError(null); // Clear any previous errors if the fetch is successful
       setStatusCode(null); // Clear the status code if the fetch is successful
     } catch (error) {
@@ -40,7 +56,7 @@ const App = () => {
         setError('Aucune réponse du serveur. Veuillez vérifier votre connexion réseau.');
       } else {
         setStatusCode(null);
-        setError('Une erreur inattendue s\'est produite. Veuillez réessayer plus tard.');
+        setError("Une erreur inattendue s'est produite. Veuillez réessayer plus tard.");
       }
       console.error('Erreur lors de la récupération des données des équipes:', error);
     }
@@ -58,19 +74,19 @@ const App = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (clubsData.length > 0) {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % clubsData.length); // Change club every minute
+      if (pagesData.length > 0) {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % pagesData.length); // Change page every minute
       }
-    }, 60000); // Change every minute
+    }, 6000); // Change every minute
 
     return () => clearInterval(interval);
-  }, [clubsData]);
+  }, [pagesData]);
 
   if (error) {
     return <ErrorPage message={error} statusCode={statusCode} />;
   }
 
-  if (clubsData.length === 0) {
+  if (pagesData.length === 0) {
     return (
       <div>
         <p>Chargement des données des clubs...</p>
@@ -80,7 +96,8 @@ const App = () => {
 
   return (
     <div>
-      <ClubPage club={clubsData[currentIndex]} />
+      {/* Pass the entire club object instead of just clubName and teams */}
+      <ClubPage club={pagesData[currentIndex]} />
     </div>
   );
 };

@@ -27,11 +27,11 @@ const MatchCard = ({ clubId, match, title }) => {
                             </div>
                             <div className="flex-1 text-center">
                                 {match.awayScore !== null ? (
-                                    <div className="text-2xl font-bold">
+                                    <div className="text-4xl font-bold">
                                         <p>{match.homeScore} - {match.awayScore}</p>
                                     </div>
                                 ) : (
-                                    <p className="text-2xl font-bold text-primary">VS</p>
+                                    <p className="text-4xl font-bold text-primary">VS</p>
                                 )}
                                 {match.awayPenaltiesScore !== null && (
                                     <div className="mt-2">
