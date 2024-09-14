@@ -317,12 +317,15 @@ async function getNextTeamMatch(clubId, teamId) {
     const date_before = utils.getNext2MonthDate(); // Date deux mois après
 
     const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes/${teamId}/calendrier?ma_dat[after]=${date_after}&ma_dat[before]=${date_before}`;
+    console.log(url);
 
     try {
         const response = await axios.get(url);
 
         if (response.status === 200) {
             let matches = response.data['hydra:member'];
+
+            console.log(matches);
 
             // Obtenez l'heure actuelle dans le fuseau Europe/Paris
             const now = moment().tz('Europe/Paris');
