@@ -20,13 +20,13 @@ const App = () => {
       // Filter out clubs that have no teams
       const clubsWithTeams = response.data.filter(club => club.teams && club.teams.length > 0);
 
-      // Split teams into groups of 5
+      // Split teams into groups of 3
       const clubsWithGroupedTeams = clubsWithTeams.flatMap(club => {
         const groupedTeams = [];
-        for (let i = 0; i < club.teams.length; i += 5) {
+        for (let i = 0; i < club.teams.length; i += 3) {
           groupedTeams.push({
             ...club, // Spread the entire club object to pass it later
-            teams: club.teams.slice(i, i + 5), // Grouping teams in chunks of 5
+            teams: club.teams.slice(i, i + 3), // Grouping teams in chunks of 3
           });
         }
         return groupedTeams;
