@@ -333,6 +333,7 @@ async function getNextTeamMatch(clubId, teamId) {
             let matches = response.data['hydra:member'];
 
             const now = DateTime.now().setZone('Europe/Paris').toJSDate(); // Date et heure actuelles
+            console.log('Date et heure actuelles:', now);
 
             // Fonction pour convertir l'heure au format 'HH'H'mm' en 'HH:mm'
             const convertTimeFormat = (timeStr) => {
