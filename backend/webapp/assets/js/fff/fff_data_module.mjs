@@ -349,6 +349,8 @@ async function getNextTeamMatch(clubId, teamId) {
                 return { ...match, dateObj };
             }).sort((a, b) => a.dateObj - b.dateObj);
 
+            console.log(matches);
+
             // Trouver le prochain match qui se déroule après l'heure actuelle
             const nextMatch = matches.find(match => match.dateObj > now);
 
