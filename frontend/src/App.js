@@ -77,7 +77,7 @@ const App = () => {
       if (pagesData.length > 0) {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % pagesData.length); // Change page every minute
       }
-    }, 6000); // Change every minute
+    }, 60000); // Change every minute
 
     return () => clearInterval(interval);
   }, [pagesData]);
