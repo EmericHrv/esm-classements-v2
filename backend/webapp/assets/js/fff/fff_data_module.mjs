@@ -311,8 +311,9 @@ async function getCompetitionTeams(competitionId, phaseId, groupId) {
 }
 
 async function getNextTeamMatch(clubId, teamId) {
-    const date_after = utils.getCurrentDate();
-    const date_before = utils.getNext2MonthDate();
+    const date_after = utils.getCurrentDate(); // Date actuelle en format 'YYYY-MM-DD'
+    const date_before = utils.getNext2MonthDate(); // Date deux mois après
+
     const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes/${teamId}/calendrier?ma_dat[after]=${date_after}&ma_dat[before]=${date_before}`;
 
     try {
@@ -321,40 +322,32 @@ async function getNextTeamMatch(clubId, teamId) {
         if (response.status === 200) {
             let matches = response.data['hydra:member'];
 
-            const now = moment.tz('Europe/Paris'); // Date et heure actuelles en Europe/Paris
+            // Obtenez l'heure actuelle dans le fuseau Europe/Paris
+            const now = moment().tz('Europe/Paris');
 
+            // Fonction pour convertir l'heure au format 'HHH' en 'HH:mm'
             const convertTimeFormat = (timeStr) => {
-                // Vérifie que le format est correct, sinon retourne une heure par défaut
                 if (!timeStr || !timeStr.match(/^\d{1,2}H\d{2}$/)) {
-                    return '00:00:00'; // Si l'heure n'est pas valide, retourne minuit par défaut
+                    return '00:00'; // Si l'heure est incorrecte, retourner '00:00' par défaut
                 }
-                // Remplace "H" par ":" pour convertir en format HH:mm
-                return timeStr.replace('H', ':') + ':00'; // Ajouter les secondes à "HH:mm:ss"
+                return timeStr.replace('H', ':'); // Transformer '15H00' en '15:00'
             };
 
+            // Fonction pour combiner la date et l'heure en un objet Date
             const parseMatchDateTime = (isoDateStr, timeStr) => {
-                const correctedTime = convertTimeFormat(timeStr); // Corrige l'heure "15H00" en "15:00:00"
-
-                // Utiliser la date ISO telle quelle, elle est déjà complète (avec fuseau horaire)
-                const dateOnly = moment(isoDateStr).format('YYYY-MM-DD'); // Extraire juste la partie date
-
-                // Combiner la date et l'heure en format ISO
-                const dateTimeStr = `${dateOnly}T${correctedTime}`; // Fusionne la date avec l'heure
-
-                // Utiliser moment.tz() avec le fuseau Europe/Paris
-                return moment.tz(dateTimeStr, 'Europe/Paris').toDate();
+                const correctedTime = convertTimeFormat(timeStr); // Corrige le format de l'heure
+                const dateOnly = moment(isoDateStr).format('YYYY-MM-DD'); // On garde seulement la date au format ISO
+                const dateTimeStr = `${dateOnly}T${correctedTime}:00`; // Fusionne la date et l'heure
+                return moment.tz(dateTimeStr, 'Europe/Paris').toDate(); // Retourne la date en Europe/Paris
             };
-
-
 
             // Convertir les dates et heures des matchs en objets Date, puis trier par date
             matches = matches.map(match => {
-                // console.log(`match['date'], match['time'] : ${match['date']}, ${match['time']}`);
                 const dateObj = parseMatchDateTime(match['date'], match['time']);
                 return { ...match, dateObj };
             }).sort((a, b) => a.dateObj - b.dateObj);
 
-            // Trouver le prochain match qui se déroule après la date et l'heure actuelles
+            // Trouver le prochain match qui se déroule après l'heure actuelle
             const nextMatch = matches.find(match => match.dateObj > now);
 
             if (nextMatch) {
@@ -401,7 +394,7 @@ async function getNextTeamMatch(clubId, teamId) {
                             surface: nextMatch['terrain']['libelle_surface'],
                         }
                         : null,
-                    date: utils.formatFrenchDate(nextMatch['date']),
+                    date: utils.formatFrenchDate(nextMatch['date']), // Formater la date pour l'affichage
                     time: nextMatch['time'],
                     homeScore: nextMatch['home_score'],
                     homePenaltiesScore: nextMatch['home_nb_tir_but'],
@@ -409,7 +402,7 @@ async function getNextTeamMatch(clubId, teamId) {
                     awayPenaltiesScore: nextMatch['away_nb_tir_but'],
                 };
             } else {
-                return null; // Aucun match trouvé après la date d'aujourd'hui
+                return null; // Aucun match trouvé après la date actuelle
             }
         } else {
             throw new Error('Erreur de chargement des données');
@@ -419,6 +412,7 @@ async function getNextTeamMatch(clubId, teamId) {
         return null;
     }
 }
+
 
 async function getLastTeamMatch(clubId, teamId) {
     // console.log('getLastTeamMatch');
