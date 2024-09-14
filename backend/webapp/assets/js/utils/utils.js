@@ -1,4 +1,4 @@
-import moment from 'moment-timezone';
+import moment from 'moment-timezone';  // Importer moment-timezone pour gérer les fuseaux horaires
 
 function getLetterFromIndex(index) {
     if (index >= 1 && index <= 26) {
@@ -9,10 +9,10 @@ function getLetterFromIndex(index) {
 }
 
 function formatFrenchDate(dateString) {
-    // Parse la date avec moment
+    // Parse la date avec moment dans le fuseau horaire Europe/Paris
     const parsedDate = moment.tz(dateString, 'Europe/Paris');
 
-    // Formate la date selon le format souhaité
+    // Formate la date selon le format souhaité en français
     const formattedDate = parsedDate.locale('fr').format('ddd DD MMMM');
 
     // Capitalize the first letter of the day and month
@@ -22,17 +22,17 @@ function formatFrenchDate(dateString) {
     return capitalizedDate;
 }
 
-// Nouvelle fonction pour obtenir la date actuelle au format "YYYY-MM-DD"
+// Fonction pour obtenir la date actuelle dans le fuseau Europe/Paris
 function getCurrentDate() {
     return moment().tz('Europe/Paris').format('YYYY-MM-DD');
 }
 
-// Nouvelle fonction pour obtenir la date actuelle + 1 jour au format "YYYY-MM-DD"
+// Fonction pour obtenir la date du jour suivant dans le fuseau Europe/Paris
 function getNextDayDate() {
     return moment().tz('Europe/Paris').add(1, 'day').format('YYYY-MM-DD');
 }
 
-// Nouvelle fonction pour obtenir la date actuelle + 1 mois au format "YYYY-MM-DD"
+// Fonction pour obtenir la date dans 2 mois dans le fuseau Europe/Paris
 function getNext2MonthDate() {
     return moment().tz('Europe/Paris').add(2, 'month').format('YYYY-MM-DD');
 }

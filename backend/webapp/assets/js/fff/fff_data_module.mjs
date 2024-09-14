@@ -1,10 +1,9 @@
 // fff_data_manager.mjs
 import axios from 'axios';
 import utils from '../utils/utils.js';
-import { DateTime } from 'luxon';
+import moment from 'moment-timezone';  // Importer moment-timezone
 
 async function getClubTeams(clubId) {
-    // console.log(`getClubTeams ${clubId}`);
     const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes`;
 
     try {
@@ -12,15 +11,11 @@ async function getClubTeams(clubId) {
 
         if (response.status === 200) {
             const data = response.data['hydra:member'];
-            // console.log("data", data);
-
             const allTeams = [];
             const clubName = data[0]['club']['name'] || '';
 
-            // Parcourir chaque équipe dans la liste
             for (const teamData of data) {
                 if (teamData['engagements'].length > 0) {
-                    // Créer une variable pour une seule équipe
                     const singleTeam = {
                         id: teamData['number'],
                         clubId: teamData['club']['cl_no'],
@@ -35,7 +30,6 @@ async function getClubTeams(clubId) {
 
                     singleTeam.title = `${singleTeam.category} ${singleTeam.codeLetter}`;
 
-                    // Récupérer les données de la compétition
                     for (const competitionData of teamData['engagements']) {
                         if (competitionData['competition']['type'] === 'CH') {
                             const id = competitionData['competition']['cp_no'];
@@ -56,14 +50,10 @@ async function getClubTeams(clubId) {
                         }
                     }
 
-                    // Ajouter cette équipe à la liste des équipes
                     allTeams.push(singleTeam);
                 }
             }
 
-            // console.log(" allTeams", allTeams);
-
-            // Retourner un objet contenant le clubName et les équipes
             return {
                 clubName: clubName,
                 teams: allTeams
@@ -324,7 +314,6 @@ async function getNextTeamMatch(clubId, teamId) {
     const date_after = utils.getCurrentDate();
     const date_before = utils.getNext2MonthDate();
     const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes/${teamId}/calendrier?ma_dat[after]=${date_after}&ma_dat[before]=${date_before}`;
-    // console.log(url);
 
     try {
         const response = await axios.get(url);
@@ -332,35 +321,41 @@ async function getNextTeamMatch(clubId, teamId) {
         if (response.status === 200) {
             let matches = response.data['hydra:member'];
 
-            const now = DateTime.now().setZone('Europe/Paris').toJSDate(); // Date et heure actuelles
+            const now = moment.tz('Europe/Paris'); // Date et heure actuelles en Europe/Paris
 
-            // Fonction pour convertir l'heure au format 'HH'H'mm' en 'HH:mm'
             const convertTimeFormat = (timeStr) => {
-                return timeStr.replace('H', ':');
+                // Vérifie que le format est correct, sinon retourne une heure par défaut
+                if (!timeStr || !timeStr.match(/^\d{1,2}H\d{2}$/)) {
+                    return '00:00:00'; // Si l'heure n'est pas valide, retourne minuit par défaut
+                }
+                // Remplace "H" par ":" pour convertir en format HH:mm
+                return timeStr.replace('H', ':') + ':00'; // Ajouter les secondes à "HH:mm:ss"
             };
 
-            // Fonction pour combiner la date (au format ISO) et l'heure du match en un objet Date
             const parseMatchDateTime = (isoDateStr, timeStr) => {
-                const correctedTime = convertTimeFormat(timeStr); // Corrige le format de l'heure
-                // Extraire la partie date de l'ISO sans l'heure et la combiner avec l'heure correcte
-                const dateOnly = DateTime.fromISO(isoDateStr).toFormat('yyyy-MM-dd'); // Obtenir juste la date
-                // Créer un nouvel objet Date avec la date et l'heure combinées dans le fuseau horaire de Paris
-                return DateTime.fromISO(`${dateOnly}T${correctedTime}`, { zone: 'Europe/Paris' }).toJSDate();
+                const correctedTime = convertTimeFormat(timeStr); // Corrige l'heure "15H00" en "15:00:00"
+
+                // Utiliser la date ISO telle quelle, elle est déjà complète (avec fuseau horaire)
+                const dateOnly = moment(isoDateStr).format('YYYY-MM-DD'); // Extraire juste la partie date
+
+                // Combiner la date et l'heure en format ISO
+                const dateTimeStr = `${dateOnly}T${correctedTime}`; // Fusionne la date avec l'heure
+
+                // Utiliser moment.tz() avec le fuseau Europe/Paris
+                return moment.tz(dateTimeStr, 'Europe/Paris').toDate();
             };
+
+
 
             // Convertir les dates et heures des matchs en objets Date, puis trier par date
             matches = matches.map(match => {
-                // Combiner date ISO et heure avant de créer l'objet Date
+                // console.log(`match['date'], match['time'] : ${match['date']}, ${match['time']}`);
                 const dateObj = parseMatchDateTime(match['date'], match['time']);
                 return { ...match, dateObj };
             }).sort((a, b) => a.dateObj - b.dateObj);
 
             // Trouver le prochain match qui se déroule après la date et l'heure actuelles
             const nextMatch = matches.find(match => match.dateObj > now);
-            console.log('Adversaire:', nextMatch['away']['short_name'], nextMatch['away']['code']);
-
-            // console.log('Date et heure Prochain match:', nextMatch.dateObj);
-
 
             if (nextMatch) {
                 // Construire et retourner l'objet match
@@ -373,17 +368,14 @@ async function getNextTeamMatch(clubId, teamId) {
                     groupName: nextMatch['poule']['name'],
                     groupId: nextMatch['poule']['stage_number'],
                     groupDay: nextMatch['poule_journee']['number'],
-                    matchStopped: nextMatch['ma_arret'] == "O" ? true : false,
+                    matchStopped: nextMatch['ma_arret'] === "O" ? true : false,
                     homeTeam: nextMatch['home']
                         ? {
                             id: nextMatch['home']['number'],
                             clubId: nextMatch['home']['club']['cl_no'],
                             categoryCode: nextMatch['home']['category_code'],
                             code: nextMatch['home']['code'],
-                            category:
-                                nextMatch['home']['category_code'] === "SEM"
-                                    ? "SENIORS"
-                                    : nextMatch['home']['category_code'],
+                            category: nextMatch['home']['category_code'] === "SEM" ? "SENIORS" : nextMatch['home']['category_code'],
                             name: `${nextMatch['home']['short_name']} ${nextMatch['home']['code']}`,
                             logoUrl: nextMatch['home']['club']['logo'] || '',
                         }
@@ -394,10 +386,7 @@ async function getNextTeamMatch(clubId, teamId) {
                             clubId: nextMatch['away']['club']['cl_no'],
                             categoryCode: nextMatch['away']['category_code'],
                             code: nextMatch['away']['code'],
-                            category:
-                                nextMatch['away']['category_code'] === "SEM"
-                                    ? "SENIORS"
-                                    : nextMatch['away']['category_code'],
+                            category: nextMatch['away']['category_code'] === "SEM" ? "SENIORS" : nextMatch['away']['category_code'],
                             name: `${nextMatch['away']['short_name']} ${nextMatch['away']['code']}`,
                             logoUrl: nextMatch['away']['club']['logo'] || '',
                         }
