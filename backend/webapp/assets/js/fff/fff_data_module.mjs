@@ -324,6 +324,7 @@ async function getNextTeamMatch(clubId, teamId) {
     const date_after = utils.getCurrentDate();
     const date_before = utils.getNext2MonthDate();
     const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes/${teamId}/calendrier?ma_dat[after]=${date_after}&ma_dat[before]=${date_before}`;
+    // console.log(url);
 
     try {
         const response = await axios.get(url);
