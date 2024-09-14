@@ -24,6 +24,11 @@ const Match = ({ clubId, match }) => {
                         <div className="text-4xl font-bold">
                             <p>{match.homeScore} - {match.awayScore}</p>
                         </div>
+                        {match.forfeit ? (
+                            <div className="mt-2">
+                                <p className="text-xs">Forfait</p>
+                            </div>
+                        ) : null}
                     </div>
                     <div className="flex-1 text-center">
                         {match.awayTeam.logoUrl && (

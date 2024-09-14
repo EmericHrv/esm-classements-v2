@@ -176,6 +176,7 @@ async function getCompetitionResults(competitionId, phaseId, groupId) {
                     homePenaltiesScore: matchData['home_nb_tir_but'],
                     awayScore: matchData['away_score'],
                     awayPenaltiesScore: matchData['away_nb_tir_but'],
+                    forfeit: matchData['home_resu'] == "FM" || matchData['away_resu'] == "FM" ? true : false,
                 };
 
                 return match;
@@ -249,6 +250,7 @@ async function getCompetitionCalendar(competitionId, phaseId, groupId) {
                     homePenaltiesScore: matchData['home_nb_tir_but'],
                     awayScore: matchData['away_score'],
                     awayPenaltiesScore: matchData['away_nb_tir_but'],
+                    forfeit: matchData['home_resu'] == "FM" || matchData['away_resu'] == "FM" ? true : false,
                 };
 
                 return match;
@@ -400,6 +402,7 @@ async function getNextTeamMatch(clubId, teamId) {
                     homePenaltiesScore: nextMatch['home_nb_tir_but'],
                     awayScore: nextMatch['away_score'],
                     awayPenaltiesScore: nextMatch['away_nb_tir_but'],
+                    forfeit: nextMatch['home_resu'] == "FM" || nextMatch['away_resu'] == "FM" ? true : false,
                 };
             } else {
                 return null; // Aucun match trouvé après la date actuelle
@@ -479,6 +482,7 @@ async function getLastTeamMatch(clubId, teamId) {
                 homePenaltiesScore: data['home_nb_tir_but'],
                 awayScore: data['away_score'],
                 awayPenaltiesScore: data['away_nb_tir_but'],
+                forfeit: data['home_resu'] == "FM" || data['away_resu'] == "FM" ? true : false,
             };
 
             return match;

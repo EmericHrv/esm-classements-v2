@@ -39,6 +39,11 @@ const MatchCard = ({ clubId, match, title }) => {
                                         <p className="text-base font-semibold">{match.homePenaltiesScore} - {match.awayPenaltiesScore}</p>
                                     </div>
                                 )}
+                                {match.forfeit ? (
+                                    <div className="mt-2">
+                                        <p className="text-sm">Forfait</p>
+                                    </div>
+                                ) : null}
                             </div>
                             <div className="flex-1 text-center">
                                 {match.awayTeam.logoUrl && (
