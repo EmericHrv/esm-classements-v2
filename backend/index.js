@@ -142,6 +142,7 @@ app.post("/api/nextmatch", async (req, res) => {
             nextMatch: nextMatch || null,
             hasNextMatch: nextMatch !== null
         };
+        // console.log(result);
 
         res.setHeader('Content-Type', 'application/json');
         res.send(JSON.stringify(result, null, 2)); // 2 est le nombre d'espaces pour l'indentation

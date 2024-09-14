@@ -20,13 +20,14 @@ const App = () => {
       // Filter out clubs that have no teams
       const clubsWithTeams = response.data.filter(club => club.teams && club.teams.length > 0);
 
-      // Split teams into groups of 3
+      // Sort teams by team.id and split into groups of 3
       const clubsWithGroupedTeams = clubsWithTeams.flatMap(club => {
+        const sortedTeams = club.teams.sort((a, b) => a.id - b.id);
         const groupedTeams = [];
-        for (let i = 0; i < club.teams.length; i += 3) {
+        for (let i = 0; i < sortedTeams.length; i += 3) {
           groupedTeams.push({
             ...club, // Spread the entire club object to pass it later
-            teams: club.teams.slice(i, i + 3), // Grouping teams in chunks of 3
+            teams: sortedTeams.slice(i, i + 3), // Grouping teams in chunks of 3
           });
         }
         return groupedTeams;
