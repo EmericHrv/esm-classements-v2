@@ -4,7 +4,7 @@ import http from 'http';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { getClubTeams, getGroupRanking, getNextTeamMatch, getLastTeamMatch, getCompetitionTeams, getCompetitionResults, getCompetitionCalendar, getNextTeamMatchTest } from './webapp/assets/js/fff/fff_data_module.mjs';
+import { getClubTeams, getGroupRanking, getNextTeamMatch, getLastTeamMatch, getCompetitionTeams, getCompetitionResults, getCompetitionCalendar } from './webapp/assets/js/fff/fff_data_module.mjs';
 
 dotenv.config();
 const { NODE_ENV } = process.env;
@@ -136,32 +136,6 @@ app.post("/api/nextmatch", async (req, res) => {
 
     try {
         const nextMatch = await getNextTeamMatch(clubId, teamId);
-        const result = {
-            clubId,
-            teamId,
-            nextMatch: nextMatch || null,
-            hasNextMatch: nextMatch !== null
-        };
-        // console.log(result);
-
-        res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify(result, null, 2)); // 2 est le nombre d'espaces pour l'indentation
-    } catch (error) {
-        console.error('Error:', error.message);
-        res.status(500).json({ error: 'Unable to fetch next match' });
-    }
-});
-
-// route de test pour récupérer le prochain match d'une équipe
-app.post("/api/nextmatchtest", async (req, res) => {
-    const { clubId, teamId } = req.body;
-
-    if (!clubId || !teamId) {
-        return res.status(400).json({ error: 'Invalid request body. Must contain clubId and teamId.' });
-    }
-
-    try {
-        const nextMatch = await getNextTeamMatchTest(clubId, teamId);
         const result = {
             clubId,
             teamId,

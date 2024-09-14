@@ -312,29 +312,6 @@ async function getCompetitionTeams(competitionId, phaseId, groupId) {
     }
 }
 
-// foction de tests pour getNextTeamMatch avec retour du corps de la réponse
-async function getNextTeamMatchTest(clubId, teamId) {
-    const date_after = utils.getCurrentDate(); // Date actuelle en format 'YYYY-MM-DD'
-    const date_before = utils.getNext2MonthDate(); // Date deux mois après
-
-    const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes/${teamId}/calendrier?ma_dat[after]=${date_after}&ma_dat[before]=${date_before}`;
-
-    try {
-        const response = await axios.get(url);
-
-        if (response.status === 200) {
-            // retourner date_after et date_before pour les tests en plus de la réponse
-            return { response: response.data['hydra:member'], date_after, date_before };
-
-        } else {
-            throw new Error('Erreur de chargement des données');
-        }
-    } catch (error) {
-        console.error(error.message);
-        return null;
-    }
-}
-
 async function getNextTeamMatch(clubId, teamId) {
     const date_after = utils.getCurrentDate(); // Date actuelle en format 'YYYY-MM-DD'
     const date_before = utils.getNext2MonthDate(); // Date deux mois après
@@ -362,6 +339,8 @@ async function getNextTeamMatch(clubId, teamId) {
             const parseMatchDateTime = (isoDateStr, timeStr) => {
                 const correctedTime = convertTimeFormat(timeStr); // Corrige le format de l'heure
                 const dateOnly = moment(isoDateStr).format('YYYY-MM-DD'); // On garde seulement la date au format ISO
+
+                // Utiliser le fuseau horaire 'Europe/Paris' explicitement pour créer la date complète
                 const dateTimeStr = `${dateOnly}T${correctedTime}:00`; // Fusionne la date et l'heure
                 return moment.tz(dateTimeStr, 'Europe/Paris').toDate(); // Retourne la date en Europe/Paris
             };
@@ -519,4 +498,4 @@ async function getLastTeamMatch(clubId, teamId) {
     }
 }
 
-export { getClubTeams, getGroupRanking, getNextTeamMatch, getLastTeamMatch, getCompetitionTeams, getCompetitionResults, getCompetitionCalendar, getNextTeamMatchTest };
+export { getClubTeams, getGroupRanking, getNextTeamMatch, getLastTeamMatch, getCompetitionTeams, getCompetitionResults, getCompetitionCalendar };
