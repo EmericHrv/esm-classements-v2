@@ -324,7 +324,7 @@ async function getNextTeamMatch(clubId, teamId) {
     const date_after = utils.getCurrentDate();
     const date_before = utils.getNext2MonthDate();
     const url = `https://api-dofa.prd-aws.fff.fr/api/clubs/${clubId}/equipes/${teamId}/calendrier?ma_dat[after]=${date_after}&ma_dat[before]=${date_before}`;
-    // console.log(url);
+    console.log(url);
 
     try {
         const response = await axios.get(url);
@@ -333,7 +333,7 @@ async function getNextTeamMatch(clubId, teamId) {
             let matches = response.data['hydra:member'];
 
             const now = DateTime.now().setZone('Europe/Paris').toJSDate(); // Date et heure actuelles
-            console.log('Date et heure actuelles:', now);
+            // console.log('Date et heure actuelles:', now);
 
             // Fonction pour convertir l'heure au format 'HH'H'mm' en 'HH:mm'
             const convertTimeFormat = (timeStr) => {
