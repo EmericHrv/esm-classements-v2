@@ -7,37 +7,41 @@ import ErrorPage from './components/ErrorPage';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://api.classements.esmorannes.com';
 
 const App = () => {
-  const [pagesData, setPagesData] = useState([]); // We store pages of clubs and team groups
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [pagesData, setPagesData] = useState([]); // Stocker les pages (groupes d'équipes par club)
+  const [currentIndex, setCurrentIndex] = useState(0); // Index du club à afficher
   const [error, setError] = useState(null);
   const [statusCode, setStatusCode] = useState(null);
 
-  // Function to fetch and filter clubs with teams
+  // Fonction pour récupérer les données et les regrouper
   const fetchAndSetClubsData = async () => {
     try {
       const response = await axios.get(API_BASE_URL + '/api/teams');
 
-      // Filter out clubs that have no teams
+      // Filtrer les clubs qui ont des équipes
       const clubsWithTeams = response.data.filter(club => club.teams && club.teams.length > 0);
 
-      // Sort teams by team.id and split into groups of 3
+      // Regrouper les équipes par tranches de 3
       const clubsWithGroupedTeams = clubsWithTeams.flatMap(club => {
-        const sortedTeams = club.teams.sort((a, b) => a.id - b.id);
+        const sortedTeams = club.teams.sort((a, b) => a.id - b.id); // Trier les équipes par ID
         const groupedTeams = [];
+
+        // Diviser les équipes en groupes de 3
         for (let i = 0; i < sortedTeams.length; i += 3) {
           groupedTeams.push({
-            ...club, // Spread the entire club object to pass it later
-            teams: sortedTeams.slice(i, i + 3), // Grouping teams in chunks of 3
+            ...club, // Conserver les informations du club
+            teams: sortedTeams.slice(i, i + 3), // Regrouper les équipes par paquets de 3
           });
         }
+
         return groupedTeams;
       });
 
-      setPagesData(clubsWithGroupedTeams);
-      setError(null); // Clear any previous errors if the fetch is successful
-      setStatusCode(null); // Clear the status code if the fetch is successful
+      setPagesData(clubsWithGroupedTeams); // Mettre à jour les données
+      setError(null); // Réinitialiser les erreurs
+      setStatusCode(null); // Réinitialiser les codes d'état
+      setCurrentIndex(0); // Revenir au début du cycle après une nouvelle récupération des données
     } catch (error) {
-      // Handle different error types and status codes
+      // Gérer les erreurs comme auparavant
       if (error.response) {
         const statusCode = error.response.status;
         setStatusCode(statusCode);
@@ -55,34 +59,41 @@ const App = () => {
         setStatusCode(null);
         setError("Une erreur inattendue s'est produite. Veuillez réessayer plus tard.");
       }
-      console.error('Erreur lors de la récupération des données des équipes:', error);
     }
   };
 
+  // Utiliser l'effet pour récupérer les données lors du montage initial
   useEffect(() => {
     fetchAndSetClubsData();
-
-    const fetchInterval = setInterval(() => {
-      fetchAndSetClubsData(); // Re-fetch clubs and teams every minute
-    }, 60000); // 1 minute in milliseconds
-
-    return () => clearInterval(fetchInterval);
   }, []);
 
+  // Changer automatiquement de club toutes les minutes (60 secondes) après avoir reçu les données
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (pagesData.length > 0) {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % pagesData.length); // Change page every minute
-      }
-    }, 60000); // Change every minute
+    if (pagesData.length > 0) {  // Vérifier si les données sont chargées
+      const interval = setInterval(() => {
+        setCurrentIndex((prevIndex) => {
+          const newIndex = (prevIndex + 1) % pagesData.length;
 
-    return () => clearInterval(interval);
-  }, [pagesData]);
+          // Si on est revenu au début (boucle terminée), on récupère de nouvelles données
+          if (newIndex === 0) {
+            fetchAndSetClubsData(); // Actualiser les données après chaque cycle complet
+          }
 
+          return newIndex;
+        });
+      }, 60000); // 60 000 millisecondes = 1 minute
+
+      // Nettoyer l'intervalle lorsque le composant est démonté
+      return () => clearInterval(interval);
+    }
+  }, [pagesData]); // Exécuter l'effet lorsque `pagesData` change
+
+  // Affichage en cas d'erreur
   if (error) {
     return <ErrorPage message={error} statusCode={statusCode} />;
   }
 
+  // Affichage lors du chargement des données
   if (pagesData.length === 0) {
     return (
       <div>
@@ -91,9 +102,9 @@ const App = () => {
     );
   }
 
+  // Rendre le club actuel (ou le groupe de 3 équipes)
   return (
     <div>
-      {/* Pass the entire club object instead of just clubName and teams */}
       <ClubPage club={pagesData[currentIndex]} />
     </div>
   );
